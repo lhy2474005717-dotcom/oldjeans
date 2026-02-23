@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>决策助手·效益估算器</title>
+    <title>决策笔记本 · 从零开始</title>
     <style>
         * {
             box-sizing: border-box;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
         body {
-            background: linear-gradient(135deg, #f4f7fb, #8cbdb0);
+            background: linear-gradient(135deg, #d9f0e7, #bdd5e9);
             margin: 0;
             min-height: 100vh;
             display: flex;
@@ -18,32 +18,80 @@
             padding: 16px;
         }
         .app-container {
-            max-width: 1300px;
+            max-width: 1400px;
             width: 100%;
         }
-        h1 {
-            font-size: 1.9rem;
+        .decision-manager {
+            background: white;
+            border-radius: 28px;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+        }
+        .decision-manager h2 {
+            margin: 0;
+            font-size: 1.2rem;
             font-weight: 500;
-            color: #1e293b;
-            margin: 0 0 8px 0;
-            letter-spacing: -0.01em;
+            color: #334155;
+        }
+        .decision-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            flex: 1;
+        }
+        .decision-tab {
+            background: #f1f5f9;
+            border-radius: 40px;
+            padding: 8px 18px;
+            font-size: 0.95rem;
+            color: #334155;
+            cursor: pointer;
+            border: 1px solid #cbd5e1;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
+            transition: 0.1s;
         }
-        h1 small {
-            font-size: 0.9rem;
-            font-weight: 400;
-            color: #64748b;
-            background: #e9eef3;
-            padding: 4px 12px;
+        .decision-tab.active {
+            background: #766e91;
+            color: white;
+            border-color: #766e91;
+        }
+        .decision-tab .delete-decision {
+            background: none;
+            border: none;
+            color: currentColor;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 2px;
+            opacity: 0.6;
+        }
+        .decision-tab .delete-decision:hover {
+            opacity: 1;
+        }
+        .add-decision {
+            background: white;
+            border: 1px dashed #94a3b8;
             border-radius: 40px;
+            padding: 8px 18px;
+            color: #334155;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .add-decision:hover {
+            background: #e6edf6;
         }
         .decision-header {
             background: white;
             border-radius: 28px;
             padding: 20px 24px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.02), 0 2px 6px rgba(0,20,40,0.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
             margin-bottom: 24px;
             border: 1px solid #e2e8f0;
         }
@@ -154,7 +202,7 @@
             box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
         }
         .primary-btn {
-            background: #4a6989;
+            background: #394f62;
             color: white;
             border: none;
             border-radius: 40px;
@@ -167,10 +215,10 @@
             gap: 4px;
             transition: 0.15s;
             white-space: nowrap;
-            border: 1px solid #1e2a3a;
+            border: 1px solid #2563eb;
         }
         .primary-btn:hover {
-            background: #1f2a38;
+            background: #2563eb;
         }
         .cards-grid {
             display: flex;
@@ -223,7 +271,6 @@
             min-width: 60px;
             text-align: center;
         }
-        /* 编辑模式下隐藏总分数字，但保留占位 */
         .criteria-section {
             margin-bottom: 18px;
         }
@@ -405,33 +452,27 @@
             background: #f1f5f9;
             border-color: #94a3b8;
         }
-        .reset-btn {
-            background: white;
-            border: 1px solid #cbd5e1;
-            padding: 10px 24px;
-            border-radius: 40px;
-            color: #475569;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .reset-btn:hover {
-            background: #f1f5f9;
-        }
     </style>
 </head>
 <body>
 <div class="app-container">
+    <!-- 决策管理栏 -->
+    <div class="decision-manager">
+        <h2>📁 我的决策</h2>
+        <div class="decision-list" id="decisionList"></div>
+        <button class="add-decision" id="addDecisionBtn">＋ 新建决策</button>
+    </div>
+
+    <!-- 当前决策内容 -->
     <div class="decision-header">
-        <input type="text" class="decision-title-input" id="decisionNameInput" placeholder="我的决策：例如 · 买哪款车 · 选工作 · 周末去哪儿" value="">
+        <input type="text" class="decision-title-input" id="decisionNameInput" placeholder="当前决策名称">
     </div>
 
     <div class="config-row">
         <!-- 标准面板 -->
         <div class="config-panel">
-            <h2>📋 硬性标准 <span></h2>
-            <div id="standardList" class="item-list">
-                <!-- 动态渲染 -->
-            </div>
+            <h2>📋 硬性标准 <span>满足则 +1，否则-1</span></h2>
+            <div id="standardList" class="item-list"></div>
             <div class="add-item-area">
                 <input type="text" id="newStandardInput" placeholder="例如: 价格低于30万" value="">
                 <button class="primary-btn" id="addStandardBtn">＋ 添加标准</button>
@@ -440,10 +481,8 @@
 
         <!-- 选项面板 -->
         <div class="config-panel">
-            <h2>🔀 正纠结的选择 <span>可随时增减</span></h2>
-            <div id="optionList" class="item-list">
-                <!-- 动态渲染 -->
-            </div>
+            <h2>🔀 正在纠结的选择 <span>可随时增减</span></h2>
+            <div id="optionList" class="item-list"></div>
             <div class="add-item-area">
                 <input type="text" id="newOptionInput" placeholder="例如: 特斯拉Model 3" value="">
                 <button class="primary-btn" id="addOptionBtn">＋ 添加选项</button>
@@ -453,105 +492,159 @@
 
     <!-- 卡片标题 + 排序/编辑控制按钮 -->
     <div class="action-bar">
-        <h2 style="font-weight: 500; margin:0;">⚖️ 效益估算值 </h2>
+        <h2 style="font-weight: 500; margin:0;"> 各选项总分 </h2>
         <div class="sort-buttons">
-            <button class="secondary-btn" id="sortBtn">🔽 一键排序</button>
-            <button class="secondary-btn" id="editModeBtn">✏️ 重新编辑</button>
-            <button class="reset-btn" id="resetExampleBtn">🔄 重置示例</button>
+            <button class="secondary-btn" id="sortBtn">一键排序</button>
+            <button class="secondary-btn" id="editModeBtn">重新编辑</button>
         </div>
     </div>
-    <div id="cardsContainer" class="cards-grid">
-        <!-- 由js渲染 -->
-    </div>
+    <div id="cardsContainer" class="cards-grid"></div>
     
     <div class="footer-note">
-         每个标准右侧点 +1 表示满足，点 0 表示不满足 · 额外好处/坏处可自定义数值（默认为+1/-1） · 总分 = 标准分总和 + 所有额外项数值之和
+        tip：每个标准右侧点 +1 表示满足，点 0 表示不满足 · 额外好处/坏处可自定义数值 · 所有数据自动保存在浏览器中
     </div>
 </div>
 
 <script>
     (function() {
-        // --- 核心数据模型 ---
-        let decision = {
-            name: '',               // 初始为空
-            standards: [],           // 初始无标准
-            options: []              // 初始无选项
-        };
+        let decisions = [];
+        let currentDecisionId = null;
+        let viewMode = 'edit';
+        let sortedOptionIds = [];
 
-        // 视图模式: 'edit' 或 'sorted'
-        let viewMode = 'edit';       
-        // 当处于 sorted 模式时，按照这个ID数组顺序渲染卡片 (由一键排序生成)
-        let sortedOptionIds = [];    
-
-        // 辅助：唯一ID生成
         function generateId() {
             return Date.now() + '-' + Math.random().toString(36).substring(2, 9);
         }
 
-        // --- 示例数据（供重置按钮使用）--- 更新为带value的格式
-        function loadExample() {
-            const std1 = { id: generateId(), text: '续航 > 500km' };
-            const std2 = { id: generateId(), text: '智能驾驶' };
-            const std3 = { id: generateId(), text: '座椅通风' };
-            const std4 = { id: generateId(), text: '品牌口碑' };
-            decision.standards = [std1, std2, std3, std4];
-
-            const opt1 = {
-                id: generateId(),
-                name: '比亚迪汉',
-                scores: { [std1.id]: 1, [std2.id]: 1, [std3.id]: 0, [std4.id]: 1 },
-                benefits: [{ id: generateId(), text: '刀片电池安全', value: 2 }],  // 自定义数值
-                drawbacks: [{ id: generateId(), text: '车机卡顿', value: -2 }]
-            };
-            const opt2 = {
-                id: generateId(),
-                name: '特斯拉Model 3',
-                scores: { [std1.id]: 1, [std2.id]: 1, [std3.id]: 0, [std4.id]: 0 },
-                benefits: [{ id: generateId(), text: '超充网络', value: 3 }, { id: generateId(), text: '保值率好', value: 1 }],
-                drawbacks: [{ id: generateId(), text: '内饰简陋', value: -1 }]
-            };
-            const opt3 = {
-                id: generateId(),
-                name: '极氪001',
-                scores: { [std1.id]: 1, [std2.id]: 0, [std3.id]: 1, [std4.id]: 0 },
-                benefits: [{ id: generateId(), text: '猎装造型', value: 1 }],
-                drawbacks: [{ id: generateId(), text: '车机bug', value: -1 }, { id: generateId(), text: '电耗高', value: -2 }]
-            };
-            decision.options = [opt1, opt2, opt3];
-            decision.name = '买新能源车'; 
+        // 从 localStorage 加载数据，若无则创建一个空白决策
+        function loadFromStorage() {
+            const saved = localStorage.getItem('decisionAppData');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    decisions = data.decisions || [];
+                    currentDecisionId = data.currentDecisionId || (decisions.length > 0 ? decisions[0].id : null);
+                } catch (e) {
+                    // 数据损坏，重置为空白
+                    decisions = [{
+                        id: generateId(),
+                        name: '新决策',
+                        standards: [],
+                        options: []
+                    }];
+                    currentDecisionId = decisions[0].id;
+                }
+            } else {
+                // 首次使用，创建一个空白决策
+                decisions = [{
+                    id: generateId(),
+                    name: '新决策',
+                    standards: [],
+                    options: []
+                }];
+                currentDecisionId = decisions[0].id;
+            }
         }
 
-        // --- 工具：计算单个选项总分 (累加标准分 + 所有额外项的value) ---
-        function computeOptionTotal(option) {
-            const standardsSum = decision.standards.reduce((acc, std) => {
-                return acc + (option.scores[std.id] || 0);
-            }, 0);
-            // 累加好处与坏处的value (坏处已经是负数)
+        function saveToStorage() {
+            const data = {
+                decisions: decisions,
+                currentDecisionId: currentDecisionId
+            };
+            localStorage.setItem('decisionAppData', JSON.stringify(data));
+        }
+
+        function getCurrentDecision() {
+            return decisions.find(d => d.id === currentDecisionId) || null;
+        }
+
+        function renderDecisionList() {
+            const container = document.getElementById('decisionList');
+            container.innerHTML = '';
+            decisions.forEach(dec => {
+                const tab = document.createElement('div');
+                tab.className = `decision-tab ${dec.id === currentDecisionId ? 'active' : ''}`;
+                tab.dataset.id = dec.id;
+                tab.innerHTML = `
+                    <span class="decision-name">${escapeHtml(dec.name) || '未命名'}</span>
+                    <button class="delete-decision" data-id="${dec.id}" title="删除">✕</button>
+                `;
+                tab.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-decision')) return;
+                    switchDecision(dec.id);
+                });
+                container.appendChild(tab);
+            });
+            document.querySelectorAll('.delete-decision').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    deleteDecision(id);
+                });
+            });
+        }
+
+        function switchDecision(id) {
+            if (id === currentDecisionId) return;
+            currentDecisionId = id;
+            viewMode = 'edit';
+            sortedOptionIds = [];
+            saveToStorage();
+            renderAll();
+        }
+
+        function createNewDecision() {
+            const newDec = {
+                id: generateId(),
+                name: '新决策',
+                standards: [],
+                options: []
+            };
+            decisions.push(newDec);
+            currentDecisionId = newDec.id;
+            viewMode = 'edit';
+            sortedOptionIds = [];
+            saveToStorage();
+            renderAll();
+        }
+
+        function deleteDecision(id) {
+            if (decisions.length === 1) {
+                alert('至少保留一个决策');
+                return;
+            }
+            decisions = decisions.filter(d => d.id !== id);
+            if (currentDecisionId === id) {
+                currentDecisionId = decisions[0].id;
+                viewMode = 'edit';
+                sortedOptionIds = [];
+            }
+            saveToStorage();
+            renderAll();
+        }
+
+        function computeOptionTotal(option, standards) {
+            const standardsSum = standards.reduce((acc, std) => acc + (option.scores[std.id] || 0), 0);
             const extrasSum = [...option.benefits, ...option.drawbacks].reduce((acc, item) => acc + (item.value || 0), 0);
             return standardsSum + extrasSum;
         }
 
-        // --- 根据当前总分重新计算排序ID列表 (降序) ---
-        function refreshSortedIds() {
-            // 复制选项，按总分降序，然后提取id
-            const sorted = [...decision.options].sort((a, b) => computeOptionTotal(b) - computeOptionTotal(a));
+        function refreshSortedIds(decision) {
+            const sorted = [...decision.options].sort((a, b) => computeOptionTotal(b, decision.standards) - computeOptionTotal(a, decision.standards));
             sortedOptionIds = sorted.map(opt => opt.id);
         }
 
-        // --- 渲染整个UI ---
-        function renderAll() {
-            renderStandardList();
-            renderOptionManager();
-            renderCards();
-            // 同步决策名称输入框
-            document.getElementById('decisionNameInput').value = decision.name;
+        function escapeHtml(unsafe) {
+            return unsafe.replace(/[&<>"']/g, function(m) {
+                if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;';
+                if(m === '"') return '&quot;'; return '&#039;';
+            });
         }
 
-        // 渲染左侧标准列表（只读文本 + 删除）
-        function renderStandardList() {
+        function renderStandardList(decision) {
             const container = document.getElementById('standardList');
-            if (!container) return;
             container.innerHTML = '';
+            if (!decision) return;
             if (decision.standards.length === 0) {
                 container.innerHTML = '<div class="empty-message">暂无标准，请添加</div>';
                 return;
@@ -565,8 +658,6 @@
                 `;
                 container.appendChild(row);
             });
-
-            // 绑定删除事件
             document.querySelectorAll('.delete-standard-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -576,11 +667,10 @@
             });
         }
 
-        // 渲染右侧选项管理列表（只读名称 + 删除）
-        function renderOptionManager() {
+        function renderOptionManager(decision) {
             const container = document.getElementById('optionList');
-            if (!container) return;
             container.innerHTML = '';
+            if (!decision) return;
             if (decision.options.length === 0) {
                 container.innerHTML = '<div class="empty-message">暂无选项，请添加</div>';
                 return;
@@ -594,7 +684,6 @@
                 `;
                 container.appendChild(row);
             });
-
             document.querySelectorAll('.delete-option-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -604,42 +693,30 @@
             });
         }
 
-        // 转义（简单防XSS）
-        function escapeHtml(unsafe) {
-            return unsafe.replace(/[&<>"']/g, function(m) {
-                if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;';
-                if(m === '"') return '&quot;'; return '&#039;';
-            });
-        }
-
-        // 删除标准
         function deleteStandardById(stdId) {
-            // 从每个选项的scores中删除该标准
-            decision.options.forEach(opt => {
-                delete opt.scores[stdId];
-            });
+            const decision = getCurrentDecision();
+            if (!decision) return;
+            decision.options.forEach(opt => delete opt.scores[stdId]);
             decision.standards = decision.standards.filter(s => s.id !== stdId);
-            
+            if (viewMode === 'sorted') refreshSortedIds(decision);
+            saveToStorage();
             renderAll();
         }
 
-        // 删除选项
         function deleteOptionById(optId) {
+            const decision = getCurrentDecision();
+            if (!decision) return;
             decision.options = decision.options.filter(o => o.id !== optId);
-            if (viewMode === 'sorted') {
-                refreshSortedIds();
-            }
+            if (viewMode === 'sorted') refreshSortedIds(decision);
+            saveToStorage();
             renderAll();
         }
 
-        // 渲染所有卡片（根据viewMode决定顺序以及是否显示总分）
-        function renderCards() {
+        function renderCards(decision) {
             const container = document.getElementById('cardsContainer');
-            if (!container) return;
             container.innerHTML = '';
-
-            if (decision.options.length === 0 || decision.standards.length === 0) {
-                container.innerHTML = '<div class="empty-message" style="width:100%; padding: 40px;">至少添加一个标准和一项选择，才能看到评分卡</div>';
+            if (!decision || decision.standards.length === 0 || decision.options.length === 0) {
+                container.innerHTML = '<div class="empty-message" style="width:100%; padding: 40px;">请至少添加一个标准和一项选择👀</div>';
                 return;
             }
 
@@ -655,241 +732,234 @@
             optionsToRender.forEach(opt => {
                 const card = document.createElement('div');
                 card.className = 'option-card';
-                card.dataset.optionId = opt.id;
+                const total = computeOptionTotal(opt, decision.standards);
 
-                const total = computeOptionTotal(opt);
-
-                // 头部
-                const headerDiv = document.createElement('div');
-                headerDiv.className = 'card-header';
-                
-                let totalHtml = '';
-                if (viewMode === 'sorted') {
-                    totalHtml = `<div class="card-total">${total}</div>`;
-                } else {
-                    totalHtml = `<div class="card-total" style="background:transparent; color:transparent;">0</div>`;
-                }
-                
-                headerDiv.innerHTML = `
-                    <h3>${escapeHtml(opt.name)}</h3>
-                    ${totalHtml}
+                card.innerHTML = `
+                    <div class="card-header">
+                        <h3>${escapeHtml(opt.name)}</h3>
+                        ${viewMode === 'sorted' ? `<div class="card-total">${total}</div>` : '<div class="card-total" style="background:transparent; color:transparent;">0</div>'}
+                    </div>
                 `;
-                card.appendChild(headerDiv);
 
-                // 标准区域
                 const criteriaDiv = document.createElement('div');
                 criteriaDiv.className = 'criteria-section';
                 decision.standards.forEach(std => {
                     const score = opt.scores[std.id] || 0;
-                    const row = document.createElement('div');
-                    row.className = 'criterion-row';
-                    row.innerHTML = `
-                        <span class="criterion-label">${escapeHtml(std.text)}</span>
-                        <div class="score-buttons">
-                            <button class="score-btn ${score === 1 ? 'active' : ''}" data-opt-id="${opt.id}" data-std-id="${std.id}" data-value="1">+1</button>
-                            <button class="score-btn ${score === 0 ? 'active' : ''}" data-opt-id="${opt.id}" data-std-id="${std.id}" data-value="0">0</button>
+                    criteriaDiv.innerHTML += `
+                        <div class="criterion-row">
+                            <span class="criterion-label">${escapeHtml(std.text)}</span>
+                            <div class="score-buttons">
+                                <button class="score-btn ${score === 1 ? 'active' : ''}" data-opt-id="${opt.id}" data-std-id="${std.id}" data-value="1">+1</button>
+                                <button class="score-btn ${score === 0 ? 'active' : ''}" data-opt-id="${opt.id}" data-std-id="${std.id}" data-value="0">0</button>
+                            </div>
                         </div>
                     `;
-                    criteriaDiv.appendChild(row);
                 });
                 card.appendChild(criteriaDiv);
 
-                // 额外好处区 (自定义数值)
                 const benefitsDiv = document.createElement('div');
                 benefitsDiv.className = 'other-section';
                 benefitsDiv.innerHTML = `<div class="other-title"><span>➕ 额外好处 (自定义数值)</span></div>`;
-                const benefitsList = document.createElement('div');
                 opt.benefits.forEach(b => {
-                    const item = document.createElement('div');
-                    item.className = 'extra-item';
-                    item.innerHTML = `
-                        <input type="text" class="benefit-input" data-opt-id="${opt.id}" data-benefit-id="${b.id}" value="${escapeHtml(b.text)}" placeholder="好处描述">
-                        <input type="number" class="benefit-value" data-opt-id="${opt.id}" data-benefit-id="${b.id}" value="${b.value !== undefined ? b.value : 1}" step="any" placeholder="数值">
-                        <button class="remove-extra" data-opt-id="${opt.id}" data-benefit-id="${b.id}" data-type="benefit">✕</button>
+                    benefitsDiv.innerHTML += `
+                        <div class="extra-item">
+                            <input type="text" class="benefit-input" data-opt-id="${opt.id}" data-benefit-id="${b.id}" value="${escapeHtml(b.text)}" placeholder="好处描述">
+                            <input type="number" class="benefit-value" data-opt-id="${opt.id}" data-benefit-id="${b.id}" value="${b.value !== undefined ? b.value : 1}" step="any">
+                            <button class="remove-extra" data-opt-id="${opt.id}" data-benefit-id="${b.id}" data-type="benefit">✕</button>
+                        </div>
                     `;
-                    benefitsList.appendChild(item);
                 });
-                benefitsDiv.appendChild(benefitsList);
-                const addBenefitBtn = document.createElement('button');
-                addBenefitBtn.className = 'add-extra-btn';
-                addBenefitBtn.textContent = '+ 添加一项好处 (默认+1)';
-                addBenefitBtn.dataset.optId = opt.id;
-                addBenefitBtn.dataset.type = 'benefit';
-                benefitsDiv.appendChild(addBenefitBtn);
+                benefitsDiv.innerHTML += `<button class="add-extra-btn" data-opt-id="${opt.id}" data-type="benefit">+ 添加一项好处 (默认+1)</button>`;
                 card.appendChild(benefitsDiv);
 
-                // 额外坏处区 (自定义数值)
                 const drawbacksDiv = document.createElement('div');
                 drawbacksDiv.className = 'other-section';
-                drawbacksDiv.innerHTML = `<div class="other-title"><span class="badge-minus">➖ 额外坏处 (自定义数值，负数)</span></div>`;
-                const drawbacksList = document.createElement('div');
+                drawbacksDiv.innerHTML = `<div class="other-title"><span class="badge-minus">➖ 额外坏处 (自定义数值)</span></div>`;
                 opt.drawbacks.forEach(d => {
-                    const item = document.createElement('div');
-                    item.className = 'extra-item';
-                    item.innerHTML = `
-                        <input type="text" class="drawback-input" data-opt-id="${opt.id}" data-drawback-id="${d.id}" value="${escapeHtml(d.text)}" placeholder="坏处描述">
-                        <input type="number" class="drawback-value" data-opt-id="${opt.id}" data-drawback-id="${d.id}" value="${d.value !== undefined ? d.value : -1}" step="any" placeholder="数值">
-                        <button class="remove-extra" data-opt-id="${opt.id}" data-drawback-id="${d.id}" data-type="drawback">✕</button>
+                    drawbacksDiv.innerHTML += `
+                        <div class="extra-item">
+                            <input type="text" class="drawback-input" data-opt-id="${opt.id}" data-drawback-id="${d.id}" value="${escapeHtml(d.text)}" placeholder="坏处描述">
+                            <input type="number" class="drawback-value" data-opt-id="${opt.id}" data-drawback-id="${d.id}" value="${d.value !== undefined ? d.value : -1}" step="any">
+                            <button class="remove-extra" data-opt-id="${opt.id}" data-drawback-id="${d.id}" data-type="drawback">✕</button>
+                        </div>
                     `;
-                    drawbacksList.appendChild(item);
                 });
-                drawbacksDiv.appendChild(drawbacksList);
-                const addDrawbackBtn = document.createElement('button');
-                addDrawbackBtn.className = 'add-extra-btn';
-                addDrawbackBtn.textContent = '+ 添加一项坏处 (默认-1)';
-                addDrawbackBtn.dataset.optId = opt.id;
-                addDrawbackBtn.dataset.type = 'drawback';
-                drawbacksDiv.appendChild(addDrawbackBtn);
+                drawbacksDiv.innerHTML += `<button class="add-extra-btn" data-opt-id="${opt.id}" data-type="drawback">+ 添加一项坏处 (默认-1)</button>`;
                 card.appendChild(drawbacksDiv);
 
                 container.appendChild(card);
             });
 
-            attachCardEvents();
+            attachCardEvents(decision);
         }
 
-        // 附加所有卡片内部事件
-        function attachCardEvents() {
-            // 1. 标准得分按钮
+        function attachCardEvents(decision) {
             document.querySelectorAll('.score-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const optId = btn.dataset.optId;
                     const stdId = btn.dataset.stdId;
                     const value = parseInt(btn.dataset.value, 10);
-                    if (!optId || !stdId) return;
-
                     const option = decision.options.find(o => o.id === optId);
                     if (option) {
                         option.scores[stdId] = value;
+                        if (viewMode === 'sorted') refreshSortedIds(decision);
+                        saveToStorage();
                         renderAll();
                     }
                 });
             });
 
-            // 2. 额外好处文本 input 实时更新
             document.querySelectorAll('.benefit-input').forEach(inp => {
                 inp.addEventListener('input', (e) => {
                     const optId = inp.dataset.optId;
                     const benefitId = inp.dataset.benefitId;
                     const option = decision.options.find(o => o.id === optId);
-                    if (option) {
-                        const benefit = option.benefits.find(b => b.id === benefitId);
-                        if (benefit) benefit.text = inp.value;
-                    }
+                    const benefit = option?.benefits.find(b => b.id === benefitId);
+                    if (benefit) benefit.text = inp.value;
+                    saveToStorage();
                 });
             });
 
-            // 3. 额外好处数值 input
             document.querySelectorAll('.benefit-value').forEach(inp => {
                 inp.addEventListener('input', (e) => {
                     const optId = inp.dataset.optId;
                     const benefitId = inp.dataset.benefitId;
                     const option = decision.options.find(o => o.id === optId);
-                    if (option) {
-                        const benefit = option.benefits.find(b => b.id === benefitId);
-                        if (benefit) {
-                            let val = parseFloat(inp.value);
-                            if (isNaN(val)) val = 1; // 默认恢复1
-                            benefit.value = val;
-                        }
+                    const benefit = option?.benefits.find(b => b.id === benefitId);
+                    if (benefit) {
+                        let val = parseFloat(inp.value);
+                        if (isNaN(val)) val = 1;
+                        benefit.value = val;
+                        if (viewMode === 'sorted') refreshSortedIds(decision);
+                        saveToStorage();
+                        renderAll();
                     }
                 });
             });
 
-            // 4. 额外坏处文本 input
             document.querySelectorAll('.drawback-input').forEach(inp => {
                 inp.addEventListener('input', (e) => {
                     const optId = inp.dataset.optId;
                     const drawbackId = inp.dataset.drawbackId;
                     const option = decision.options.find(o => o.id === optId);
-                    if (option) {
-                        const drawback = option.drawbacks.find(d => d.id === drawbackId);
-                        if (drawback) drawback.text = inp.value;
-                    }
+                    const drawback = option?.drawbacks.find(d => d.id === drawbackId);
+                    if (drawback) drawback.text = inp.value;
+                    saveToStorage();
                 });
             });
 
-            // 5. 额外坏处数值 input
             document.querySelectorAll('.drawback-value').forEach(inp => {
                 inp.addEventListener('input', (e) => {
                     const optId = inp.dataset.optId;
                     const drawbackId = inp.dataset.drawbackId;
                     const option = decision.options.find(o => o.id === optId);
-                    if (option) {
-                        const drawback = option.drawbacks.find(d => d.id === drawbackId);
-                        if (drawback) {
-                            let val = parseFloat(inp.value);
-                            if (isNaN(val)) val = -1;
-                            drawback.value = val;
-                        }
+                    const drawback = option?.drawbacks.find(d => d.id === drawbackId);
+                    if (drawback) {
+                        let val = parseFloat(inp.value);
+                        if (isNaN(val)) val = -1;
+                        drawback.value = val;
+                        if (viewMode === 'sorted') refreshSortedIds(decision);
+                        saveToStorage();
+                        renderAll();
                     }
                 });
             });
 
-            // 6. 删除好处/坏处
             document.querySelectorAll('.remove-extra').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const optId = btn.dataset.optId;
                     const benefitId = btn.dataset.benefitId;
                     const drawbackId = btn.dataset.drawbackId;
-                    const type = benefitId ? 'benefit' : 'drawback';
                     const option = decision.options.find(o => o.id === optId);
                     if (!option) return;
-
-                    if (type === 'benefit' && benefitId) {
+                    if (benefitId) {
                         option.benefits = option.benefits.filter(b => b.id !== benefitId);
                     } else if (drawbackId) {
                         option.drawbacks = option.drawbacks.filter(d => d.id !== drawbackId);
                     }
+                    if (viewMode === 'sorted') refreshSortedIds(decision);
+                    saveToStorage();
                     renderAll();
                 });
             });
 
-            // 7. 添加好处按钮
             document.querySelectorAll('.add-extra-btn[data-type="benefit"]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const optId = btn.dataset.optId;
                     const option = decision.options.find(o => o.id === optId);
                     if (option) {
-                        option.benefits.push({ id: generateId(), text: '', value: 1 }); // 默认值1
+                        option.benefits.push({ id: generateId(), text: '', value: 1 });
+                        if (viewMode === 'sorted') refreshSortedIds(decision);
+                        saveToStorage();
                         renderAll();
                     }
                 });
             });
 
-            // 8. 添加坏处按钮
             document.querySelectorAll('.add-extra-btn[data-type="drawback"]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const optId = btn.dataset.optId;
                     const option = decision.options.find(o => o.id === optId);
                     if (option) {
-                        option.drawbacks.push({ id: generateId(), text: '', value: -1 }); // 默认值-1
+                        option.drawbacks.push({ id: generateId(), text: '', value: -1 });
+                        if (viewMode === 'sorted') refreshSortedIds(decision);
+                        saveToStorage();
                         renderAll();
                     }
                 });
             });
         }
 
-        // --- 新增标准 ---
+        function renderAll() {
+            const decision = getCurrentDecision();
+            renderDecisionList();
+            if (decision) {
+                document.getElementById('decisionNameInput').value = decision.name;
+                renderStandardList(decision);
+                renderOptionManager(decision);
+                renderCards(decision);
+            } else {
+                document.getElementById('decisionNameInput').value = '';
+                document.getElementById('standardList').innerHTML = '';
+                document.getElementById('optionList').innerHTML = '';
+                document.getElementById('cardsContainer').innerHTML = '';
+            }
+        }
+
+        document.getElementById('addDecisionBtn').addEventListener('click', createNewDecision);
+
+        document.getElementById('decisionNameInput').addEventListener('input', (e) => {
+            const decision = getCurrentDecision();
+            if (decision) {
+                decision.name = e.target.value;
+                saveToStorage();
+                renderDecisionList();
+            }
+        });
+
         document.getElementById('addStandardBtn').addEventListener('click', () => {
             const input = document.getElementById('newStandardInput');
             const text = input.value.trim();
             if (!text) return alert('请输入标准内容');
-            decision.standards.push({ id: generateId(), text: text });
-            decision.options.forEach(opt => {
-                opt.scores[decision.standards[decision.standards.length-1].id] = 0;
-            });
+            const decision = getCurrentDecision();
+            if (!decision) return;
+            const newStd = { id: generateId(), text };
+            decision.standards.push(newStd);
+            decision.options.forEach(opt => opt.scores[newStd.id] = 0);
             input.value = '';
+            if (viewMode === 'sorted') refreshSortedIds(decision);
+            saveToStorage();
             renderAll();
         });
 
-        // --- 新增选项 ---
         document.getElementById('addOptionBtn').addEventListener('click', () => {
             const input = document.getElementById('newOptionInput');
             const text = input.value.trim();
             if (!text) return alert('请输入选项名称');
+            const decision = getCurrentDecision();
+            if (!decision) return;
             const newOpt = {
                 id: generateId(),
                 name: text,
@@ -897,49 +967,32 @@
                 benefits: [],
                 drawbacks: []
             };
-            decision.standards.forEach(std => {
-                newOpt.scores[std.id] = 0;
-            });
+            decision.standards.forEach(std => newOpt.scores[std.id] = 0);
             decision.options.push(newOpt);
             input.value = '';
-
-            if (viewMode === 'sorted') {
-                refreshSortedIds();
-            }
+            if (viewMode === 'sorted') refreshSortedIds(decision);
+            saveToStorage();
             renderAll();
         });
 
-        // --- 一键排序 ---
         document.getElementById('sortBtn').addEventListener('click', () => {
-            refreshSortedIds();
+            const decision = getCurrentDecision();
+            if (!decision) return;
+            refreshSortedIds(decision);
             viewMode = 'sorted';
             renderAll();
         });
 
-        // --- 重新编辑 ---
         document.getElementById('editModeBtn').addEventListener('click', () => {
             viewMode = 'edit';
             sortedOptionIds = [];
             renderAll();
         });
 
-        // 重置示例
-        document.getElementById('resetExampleBtn').addEventListener('click', () => {
-            loadExample();
-            viewMode = 'edit';
-            sortedOptionIds = [];
-            renderAll();
-        });
-
-        // 决策名称双向
-        document.getElementById('decisionNameInput').addEventListener('input', (e) => {
-            decision.name = e.target.value;
-        });
-
-        // 初始化渲染 (空数据)
+        // 初始化
+        loadFromStorage();
         renderAll();
 
-        // 输入框回车快捷添加
         document.getElementById('newStandardInput').addEventListener('keypress', (e) => {
             if(e.key === 'Enter') document.getElementById('addStandardBtn').click();
         });
