@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>决策笔记本 · 从零开始</title>
+    <title>决策笔记本 · 带AI助手</title>
     <style>
         * {
             box-sizing: border-box;
@@ -219,6 +219,21 @@
         }
         .primary-btn:hover {
             background: #2563eb;
+        }
+        .secondary-btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 10px 24px;
+            border-radius: 40px;
+            color: #2c3e50;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: 0.1s;
+        }
+        .secondary-btn:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
         }
         .cards-grid {
             display: flex;
@@ -437,21 +452,6 @@
             display: flex;
             gap: 12px;
         }
-        .secondary-btn {
-            background: white;
-            border: 1px solid #cbd5e1;
-            padding: 10px 24px;
-            border-radius: 40px;
-            color: #2c3e50;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: 0.1s;
-        }
-        .secondary-btn:hover {
-            background: #f1f5f9;
-            border-color: #94a3b8;
-        }
     </style>
 </head>
 <body>
@@ -469,13 +469,17 @@
     </div>
 
     <div class="config-row">
-        <!-- 标准面板 -->
+        <!-- 标准面板（含AI按钮） -->
         <div class="config-panel">
-            <h2>📋 硬性标准 <span>满足则 +1，否则-1</span></h2>
+            <h2>📋 硬性标准 <span>满足则 +1</span></h2>
             <div id="standardList" class="item-list"></div>
             <div class="add-item-area">
                 <input type="text" id="newStandardInput" placeholder="例如: 价格低于30万" value="">
                 <button class="primary-btn" id="addStandardBtn">＋ 添加标准</button>
+            </div>
+            <!-- AI 建议按钮 -->
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button class="secondary-btn" id="aiSuggestBtn">让AI 帮我提出标准</button>
             </div>
         </div>
 
@@ -492,7 +496,7 @@
 
     <!-- 卡片标题 + 排序/编辑控制按钮 -->
     <div class="action-bar">
-        <h2 style="font-weight: 500; margin:0;"> 各选项总分 </h2>
+        <h2 style="font-weight: 500; margin:0;">各选项总分</h2>
         <div class="sort-buttons">
             <button class="secondary-btn" id="sortBtn">一键排序</button>
             <button class="secondary-btn" id="editModeBtn">重新编辑</button>
@@ -501,7 +505,7 @@
     <div id="cardsContainer" class="cards-grid"></div>
     
     <div class="footer-note">
-        tip：每个标准右侧点 +1 表示满足，点 0 表示不满足 · 额外好处/坏处可自定义数值 · 所有数据自动保存在浏览器中
+        tip：每个标准右侧点 +1 表示满足，点 0 表示不满足；额外好处/坏处可自定义数值；所有数据自动保存在浏览器中
     </div>
 </div>
 
@@ -716,7 +720,7 @@
             const container = document.getElementById('cardsContainer');
             container.innerHTML = '';
             if (!decision || decision.standards.length === 0 || decision.options.length === 0) {
-                container.innerHTML = '<div class="empty-message" style="width:100%; padding: 40px;">请至少添加一个标准和一项选择👀</div>';
+                container.innerHTML = '<div class="empty-message" style="width:100%; padding: 40px;">请至少添加一个标准和一项选择👀 </div>';
                 return;
             }
 
@@ -928,8 +932,46 @@
             }
         }
 
-        document.getElementById('addDecisionBtn').addEventListener('click', createNewDecision);
+        // ========== AI 建议功能 ==========
+        document.getElementById('aiSuggestBtn')?.addEventListener('click', async () => {
+            const decisionName = document.getElementById('decisionNameInput').value || '当前决策';
+            const prompt = `我正在做“${decisionName}”的决策，请帮我列出可能考虑的标准（例如价格、质量、服务等），直接输出清单，每行一个标准，不要序号。`;
+            
+            // ⚠️ 请将下面的 YOUR_VERCEL_API_URL 替换为您自己的 Vercel 项目域名
+            // 例如：const apiUrl = 'https://ai-decision-api.vercel.app/api/ai-suggest';
+            const apiUrl = 'YOUR_VERCEL_API_URL/api/ai-suggest';
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                const data = await response.json();
+                if (data.reply) {
+                    const lines = data.reply.split('\n').filter(line => line.trim() !== '');
+                    lines.forEach(line => {
+                        const text = line.replace(/^[•\-*\d.\s]+/, '').trim();
+                        if (text) {
+                            const input = document.getElementById('newStandardInput');
+                            input.value = text;
+                            document.getElementById('addStandardBtn').click();
+                        }
+                    });
+                } else {
+                    alert('AI 建议获取失败，请稍后重试');
+                }
+            } catch (error) {
+                alert('网络错误，无法连接 AI 服务');
+                console.error(error);
+            }
+        });
 
+        // 初始化
+        loadFromStorage();
+        renderAll();
+
+        document.getElementById('addDecisionBtn').addEventListener('click', createNewDecision);
         document.getElementById('decisionNameInput').addEventListener('input', (e) => {
             const decision = getCurrentDecision();
             if (decision) {
@@ -938,7 +980,6 @@
                 renderDecisionList();
             }
         });
-
         document.getElementById('addStandardBtn').addEventListener('click', () => {
             const input = document.getElementById('newStandardInput');
             const text = input.value.trim();
@@ -953,7 +994,6 @@
             saveToStorage();
             renderAll();
         });
-
         document.getElementById('addOptionBtn').addEventListener('click', () => {
             const input = document.getElementById('newOptionInput');
             const text = input.value.trim();
@@ -974,7 +1014,6 @@
             saveToStorage();
             renderAll();
         });
-
         document.getElementById('sortBtn').addEventListener('click', () => {
             const decision = getCurrentDecision();
             if (!decision) return;
@@ -982,16 +1021,11 @@
             viewMode = 'sorted';
             renderAll();
         });
-
         document.getElementById('editModeBtn').addEventListener('click', () => {
             viewMode = 'edit';
             sortedOptionIds = [];
             renderAll();
         });
-
-        // 初始化
-        loadFromStorage();
-        renderAll();
 
         document.getElementById('newStandardInput').addEventListener('keypress', (e) => {
             if(e.key === 'Enter') document.getElementById('addStandardBtn').click();
@@ -1002,6 +1036,4 @@
     })();
 </script>
 </body>
-
 </html>
-
