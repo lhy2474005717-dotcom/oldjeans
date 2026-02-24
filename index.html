@@ -453,7 +453,58 @@
             display: flex;
             gap: 12px;
         }
-    </style>
+    /* 快速开始提示 */
+.quick-start {
+    background: #e6f7ff;
+    border: 1px solid #91d5ff;
+    border-radius: 40px;
+    padding: 12px 20px;
+    margin: 20px 0 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.quick-start-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.quick-start-icon {
+    font-size: 1.6rem;
+    background: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.quick-start-text {
+    font-size: 1rem;
+    color: #0050b3;
+    line-height: 1.5;
+    flex: 1;
+}
+.quick-start-text strong {
+    color: #003a8c;
+    margin-right: 8px;
+}
+/* 移动端适配 */
+@media (max-width: 600px) {
+    .quick-start-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .quick-start-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1.2rem;
+    }
+}</style>
 </head>
 <body>
 <div class="app-container">
@@ -1050,4 +1101,5 @@
 </body>
 
 </html>
+
 
